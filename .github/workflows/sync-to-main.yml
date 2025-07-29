@@ -1,0 +1,16 @@
+name: Sync to Main Site
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger sync in main repository
+      uses: peter-evans/repository-dispatch@v2
+      with:
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        repository: yamayued/newbiz-main-site
+        event-type: update-chatgpt-clone

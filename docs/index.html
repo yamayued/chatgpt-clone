@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="株式会社こころびが提供するAIチャットシステム">
+        <meta property="og:title" content="株式会社こころび - AI Chat">
+        <meta property="og:image" content="./assets/img/logo_color.png">
+        <meta property="og:description" content="株式会社こころびが提供するAIチャットシステム">
+        <meta property="og:url" content="https://yamayued.github.io/chatgpt-clone">
+        <link rel="stylesheet" href="./assets/css/style.css">
+        <link rel="apple-touch-icon" sizes="180x180" href="./assets/img/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="./assets/img/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="./assets/img/favicon-16x16.png">
+        <script src="./assets/js/chat-demo.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/markdown-it@latest/dist/markdown-it.min.js"></script>
+        <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@latest/build/styles/github-dark.min.css">
+        <script src="./assets/js/highlight.min.js"></script>
+        <script src="./assets/js/highlightjs-copy.min.js"></script>
+        <script>window.conversation_id = `demo`</script>
+        <script>
+            const user_image = `<img src="./assets/img/user.png" alt="User Avatar">`;
+            const gpt_image = `<img src="./assets/img/gpt.png" alt="GPT Avatar">`;
+        </script>
+        <title>株式会社こころび - AI Chat</title>
+    </head>
+    <body>
+        <div class="app-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <button class="new-chat-btn" onclick="new_conversation()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        新しいチャット
+                    </button>
+                    <button class="sidebar-toggle mobile-only" onclick="toggleSidebar()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="conversations-list" id="conversations">
+                    <!-- Conversations will be loaded here -->
+                </div>
+                <div class="sidebar-footer">
+                    <button class="clear-conversations" onclick="delete_conversations()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        会話をクリア
+                    </button>
+                    <div class="company-info">
+                        <img src="./assets/img/logo_color.png" alt="株式会社こころび" class="company-logo">
+                        <span>開発: 山本祐揮</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="chat-container">
+                    <div class="messages-container" id="messages">
+                        <!-- Messages will be loaded here -->
+                    </div>
+                    <div class="input-container">
+                        <div class="input-wrapper">
+                            <textarea 
+                                id="message-input" 
+                                placeholder="メッセージを送信..." 
+                                rows="1"
+                                onkeydown="if(event.keyCode==13 && !event.shiftKey){event.preventDefault();}"
+                                oninput="autoResizeTextarea(this)"
+                            ></textarea>
+                            <button class="send-button" id="send-button" onclick="sendMessage()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-options">
+                            <select id="model" class="model-select">
+                                <option value="demo" selected>デモモード</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <!-- Hidden elements for compatibility -->
+        <div style="display: none;">
+            <input type="checkbox" id="switch"/>
+            <select id="jailbreak">
+                <option value="default" selected>default</option>
+            </select>
+        </div>
+
+        <script>
+            function toggleSidebar() {
+                document.querySelector('.sidebar').classList.toggle('show');
+                document.querySelector('.app-container').classList.toggle('sidebar-open');
+            }
+
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+                if (textarea.scrollHeight > 200) {
+                    textarea.style.height = '200px';
+                    textarea.style.overflowY = 'auto';
+                } else {
+                    textarea.style.overflowY = 'hidden';
+                }
+            }
+
+            async function sendMessage() {
+                // Call handle_ask directly
+                if (typeof handle_ask === 'function' && !window.prompt_lock) {
+                    await handle_ask();
+                }
+            }
+        </script>
+    </body>
+</html>

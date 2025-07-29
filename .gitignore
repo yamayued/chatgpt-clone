@@ -4,10 +4,13 @@ __pycache__/
 *$py.class
 *.so
 .Python
-venv/
 env/
-ENV/
-.env
+venv/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.pytest_cache/
 
 # IDE
 .vscode/
@@ -20,11 +23,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Config
+# Project specific
 config.json
-
-# Dependencies
-node_modules/
-
-# Logs
 *.log
+.env

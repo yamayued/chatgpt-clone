@@ -91,6 +91,12 @@ docker-compose up
 ## 貢献
 プルリクエストや改善提案を歓迎します。お気軽にissueを作成してください。
 
+## デモサイト
+GitHub Pagesでデモ版を公開しています：  
+https://yamayued.github.io/chatgpt-clone/
+
+※ デモ版はAPIキーなしで動作し、固定メッセージを返します。
+
 ## お問い合わせ
 株式会社こころび  
 開発者: 山本祐揮  
