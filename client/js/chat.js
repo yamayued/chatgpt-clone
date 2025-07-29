@@ -477,6 +477,20 @@ window.onload = async () => {
   if (!window.location.href.endsWith(`#`)) {
     if (/\/chat\/.+/.test(window.location.href)) {
       await load_conversation(window.conversation_id);
+    } else if (conversations > 0) {
+      // Load the most recent conversation
+      let allConversations = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        if (localStorage.key(i).startsWith("conversation:")) {
+          let conversation = localStorage.getItem(localStorage.key(i));
+          allConversations.push(JSON.parse(conversation));
+        }
+      }
+      
+      if (allConversations.length > 0) {
+        window.conversation_id = allConversations[allConversations.length - 1].id;
+        await load_conversation(window.conversation_id);
+      }
     }
   }
 

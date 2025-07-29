@@ -283,9 +283,24 @@ window.onload = async () => {
   if (!hasConversations) {
     await new_conversation();
   } else {
-    // Load the first conversation or create a new one if needed
-    window.conversation_id = window.conversation_id || uuid();
-    await load_conversations(20, 0);
+    // Get the most recent conversation
+    let conversations = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      if (localStorage.key(i).startsWith("conversation:")) {
+        let conversation = localStorage.getItem(localStorage.key(i));
+        conversations.push(JSON.parse(conversation));
+      }
+    }
+    
+    // Sort by most recent (assuming last in array is most recent)
+    if (conversations.length > 0) {
+      // Use the first conversation found (or the most recent one)
+      window.conversation_id = conversations[conversations.length - 1].id;
+      await load_conversations(20, 0);
+      await load_conversation(window.conversation_id);
+    } else {
+      await new_conversation();
+    }
   }
   
   // Keydown event is handled in HTML inline handler
