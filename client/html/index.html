@@ -77,7 +77,7 @@
                                 id="message-input" 
                                 placeholder="メッセージを送信..." 
                                 rows="1"
-                                onkeydown="if(event.keyCode==13 && !event.shiftKey){event.preventDefault();}"
+                                onkeydown="if(event.keyCode==13 && !event.shiftKey){event.preventDefault(); sendMessage();}"
                                 oninput="autoResizeTextarea(this)"
                             ></textarea>
                             <button class="send-button" id="send-button" onclick="sendMessage()">

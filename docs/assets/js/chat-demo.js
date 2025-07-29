@@ -288,12 +288,7 @@ window.onload = async () => {
     await load_conversations(20, 0);
   }
   
-  message_input.addEventListener("keydown", async (event) => {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      await handle_ask();
-    }
-  });
+  // Keydown event is handled in HTML inline handler
   
   send_button.addEventListener(`click`, async () => {
     if (!prompt_lock) {
