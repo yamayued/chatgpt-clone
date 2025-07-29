@@ -55,6 +55,17 @@ window.handle_ask = handle_ask;
 const ask_gpt = async (message) => {
   prompt_lock = true;
   window.token = message_id();
+  
+  // Update conversation title with first message
+  let currentConversation = JSON.parse(localStorage.getItem(`conversation:${window.conversation_id}`));
+  if (currentConversation && currentConversation.title === "新しい会話" && currentConversation.items.length === 0) {
+    // Use first 30 characters of message as title
+    const title = message.length > 30 ? message.substring(0, 30) + "..." : message;
+    currentConversation.title = title;
+    localStorage.setItem(`conversation:${window.conversation_id}`, JSON.stringify(currentConversation));
+    // Reload conversations to show updated title
+    await load_conversations(20, 0);
+  }
 
   // Add user message
   message_box.innerHTML += `

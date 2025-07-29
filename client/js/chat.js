@@ -91,7 +91,9 @@ const ask_gpt = async (message) => {
     message_input.innerHTML = ``;
     message_input.innerText = ``;
 
-    add_conversation(window.conversation_id, message.substr(0, 20));
+    // Use first 30 characters of message as conversation title
+    const title = message.length > 30 ? message.substring(0, 30) + "..." : message;
+    add_conversation(window.conversation_id, title);
     window.scrollTo(0, 0);
     window.controller = new AbortController();
 
