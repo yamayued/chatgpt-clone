@@ -128,8 +128,8 @@ const clear_conversation = async () => {
 const new_conversation = async () => {
   window.conversation_id = uuid();
   await clear_conversation();
+  await add_conversation(window.conversation_id, "新しい会話");
   await load_conversations(20, 0, true);
-  add_conversation(window.conversation_id, "新しい会話");
 };
 
 const load_conversation = async (conversation_id) => {
@@ -264,8 +264,23 @@ const set_conversation = async (conversation_id) => {
 
 // Initialize on load
 window.onload = async () => {
-  await new_conversation();
-  await load_conversations(20, 0);
+  // Check if there are existing conversations
+  let hasConversations = false;
+  for (let i = 0; i < localStorage.length; i++) {
+    if (localStorage.key(i).startsWith("conversation:")) {
+      hasConversations = true;
+      break;
+    }
+  }
+  
+  // Only create a new conversation if there are none
+  if (!hasConversations) {
+    await new_conversation();
+  } else {
+    // Load the first conversation or create a new one if needed
+    window.conversation_id = window.conversation_id || uuid();
+    await load_conversations(20, 0);
+  }
   
   message_input.addEventListener("keydown", async (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
