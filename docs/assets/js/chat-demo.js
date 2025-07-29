@@ -23,8 +23,14 @@ const message_id = () => {
   return BigInt(`0b${unix}${random_bytes}`).toString();
 };
 
-// Initialize markdown
-const markdown = window.markdownit();
+// Initialize markdown with fallback
+let markdown;
+try {
+  markdown = window.markdownit ? window.markdownit() : null;
+} catch (e) {
+  console.warn("Markdown-it not loaded yet");
+  markdown = null;
+}
 
 const format = (text) => {
   return text.replace(/(?:\r\n|\r|\n)/g, "<br>");
@@ -151,7 +157,7 @@ const load_conversation = async (conversation_id) => {
             ${item.role == "assistant" ? gpt_image : user_image}
           </div>
           <div class="message-content">
-            ${item.role == "assistant" ? markdown.render(item.content) : item.content}
+            ${item.role == "assistant" && markdown ? markdown.render(item.content) : item.content}
           </div>
         </div>
       </div>
@@ -270,6 +276,11 @@ const set_conversation = async (conversation_id) => {
 
 // Initialize on load
 window.onload = async () => {
+  // Re-initialize markdown if needed
+  if (!markdown && window.markdownit) {
+    markdown = window.markdownit();
+  }
+  
   // Check if there are existing conversations
   let hasConversations = false;
   for (let i = 0; i < localStorage.length; i++) {
