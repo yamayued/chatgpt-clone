@@ -94,7 +94,13 @@ const ask_gpt = async (message) => {
     await new Promise(r => setTimeout(r, 30));
   }
   
-  gptDiv.innerHTML = text;
+  // Convert URLs to hyperlinks
+  const linkifyText = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #0066cc; text-decoration: underline;">$1</a>');
+  };
+  
+  gptDiv.innerHTML = linkifyText(text);
   
   // Save to conversation
   add_message(window.conversation_id, "user", message);

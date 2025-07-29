@@ -29,7 +29,7 @@ class Backend_Api:
             # Check if OpenAI key is not set or is default
             if not self.openai_key or self.openai_key == "sk-...":
                 # Return the default message as a stream
-                default_message = "本サイトは株式会社こころびが作成しております。現在AIとは接続しておりませんが、接続したらこちらにテキストが反映されます。こういったシステムを開発したい場合は、株式会社こころびにご相談くださいませ。https://cocorobi.co.jp/contact"
+                default_message = "本サイトは株式会社こころびが作成しております。現在AIとは接続しておりませんが、接続したらこちらにテキストが反映されます。こういったシステムを開発したい場合は、株式会社こころびにご相談くださいませ。[こちらからお問い合わせ](https://cocorobi.co.jp/contact)"
                 
                 def stream():
                     import time
