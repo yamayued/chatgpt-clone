@@ -32,8 +32,142 @@ try {
   markdown = null;
 }
 
+const escapeHtml = (text = "") =>
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
 const format = (text) => {
-  return text.replace(/(?:\r\n|\r|\n)/g, "<br>");
+  return escapeHtml(text).replace(/(?:\r\n|\r|\n)/g, "<br>");
+};
+
+const renderAssistantHtml = (text = "") =>
+  markdown ? markdown.render(text) : format(text);
+
+const createMessageElement = (role, content, options = {}) => {
+  const messageEl = document.createElement("div");
+  messageEl.className = `message ${role}`;
+
+  const wrapperEl = document.createElement("div");
+  wrapperEl.className = "message-wrapper";
+
+  const avatarEl = document.createElement("div");
+  avatarEl.className = "message-avatar";
+  avatarEl.innerHTML = role === "assistant" ? gpt_image : user_image;
+
+  const contentEl = document.createElement("div");
+  contentEl.className = "message-content";
+
+  if (options.id) {
+    contentEl.id = options.id;
+  }
+
+  if (options.withCursor) {
+    const cursorEl = document.createElement("div");
+    cursorEl.id = "cursor";
+    contentEl.appendChild(cursorEl);
+  } else if (role === "assistant") {
+    contentEl.innerHTML = renderAssistantHtml(content);
+  } else {
+    contentEl.innerHTML = format(content);
+  }
+
+  wrapperEl.appendChild(avatarEl);
+  wrapperEl.appendChild(contentEl);
+  messageEl.appendChild(wrapperEl);
+
+  return messageEl;
+};
+
+const createConversationElement = (conversation) => {
+  const convoEl = document.createElement("div");
+  convoEl.className = `convo ${window.conversation_id === conversation.id ? "active" : ""}`;
+  convoEl.id = `convo-${conversation.id}`;
+  convoEl.addEventListener("click", () => {
+    set_conversation(conversation.id);
+  });
+
+  const titleEl = document.createElement("span");
+  titleEl.className = "convo-title";
+  titleEl.textContent = conversation.title;
+
+  const createIcon = (id, visible, pathBuilder, onClick) => {
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.id = id;
+    icon.setAttribute(
+      "style",
+      `${visible ? "" : "display:none; "}width: 16px; height: 16px; cursor: pointer;`
+    );
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("fill", "none");
+    icon.setAttribute("stroke", "currentColor");
+    icon.setAttribute("stroke-width", "2");
+    icon.addEventListener("click", (event) => {
+      event.stopPropagation();
+      onClick();
+    });
+    pathBuilder(icon);
+    return icon;
+  };
+
+  const trashIcon = createIcon(
+    `conv-${conversation.id}`,
+    true,
+    (icon) => {
+      icon.style.marginLeft = "auto";
+      const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      polyline.setAttribute("points", "3 6 5 6 21 6");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute(
+        "d",
+        "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+      );
+      icon.appendChild(polyline);
+      icon.appendChild(path);
+    },
+    () => show_option(conversation.id)
+  );
+
+  const confirmIcon = createIcon(
+    `yes-${conversation.id}`,
+    false,
+    (icon) => {
+      const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      polyline.setAttribute("points", "20 6 9 17 4 12");
+      icon.appendChild(polyline);
+    },
+    () => delete_conversation(conversation.id)
+  );
+
+  const cancelIcon = createIcon(
+    `not-${conversation.id}`,
+    false,
+    (icon) => {
+      const line1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line1.setAttribute("x1", "18");
+      line1.setAttribute("y1", "6");
+      line1.setAttribute("x2", "6");
+      line1.setAttribute("y2", "18");
+      const line2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line2.setAttribute("x1", "6");
+      line2.setAttribute("y1", "6");
+      line2.setAttribute("x2", "18");
+      line2.setAttribute("y2", "18");
+      icon.appendChild(line1);
+      icon.appendChild(line2);
+    },
+    () => hide_option(conversation.id)
+  );
+
+  convoEl.appendChild(titleEl);
+  convoEl.appendChild(trashIcon);
+  convoEl.appendChild(confirmIcon);
+  convoEl.appendChild(cancelIcon);
+
+  return convoEl;
 };
 
 const delete_conversations = async () => {
@@ -66,34 +200,17 @@ const ask_gpt = async (message) => {
   }
 
   // Add user message
-  message_box.innerHTML += `
-    <div class="message user">
-      <div class="message-wrapper">
-        <div class="message-avatar">
-          ${user_image}
-        </div>
-        <div class="message-content"> 
-          ${format(message)}
-        </div>
-      </div>
-    </div>
-  `;
+  message_box.appendChild(createMessageElement("user", message));
 
   message_box.scrollTop = message_box.scrollHeight;
 
   // Add assistant message container
-  message_box.innerHTML += `
-    <div class="message assistant">
-      <div class="message-wrapper">
-        <div class="message-avatar">
-          ${gpt_image}
-        </div>
-        <div class="message-content" id="gpt_${window.token}">
-          <div id="cursor"></div>
-        </div>
-      </div>
-    </div>
-  `;
+  message_box.appendChild(
+    createMessageElement("assistant", "", {
+      id: `gpt_${window.token}`,
+      withCursor: true,
+    })
+  );
 
   message_box.scrollTop = message_box.scrollHeight;
 
@@ -105,17 +222,14 @@ const ask_gpt = async (message) => {
   
   for (let i = 0; i < demoMessage.length; i++) {
     text += demoMessage[i];
-    gptDiv.innerHTML = text + '<div id="cursor"></div>';
+    gptDiv.textContent = text;
+    const cursorEl = document.createElement("div");
+    cursorEl.id = "cursor";
+    gptDiv.appendChild(cursorEl);
     await new Promise(r => setTimeout(r, 30));
   }
-  
-  // Convert URLs to hyperlinks
-  const linkifyText = (text) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #0066cc; text-decoration: underline;">$1</a>');
-  };
-  
-  gptDiv.innerHTML = linkifyText(text);
+
+  gptDiv.innerHTML = renderAssistantHtml(text);
   
   // Save to conversation
   add_message(window.conversation_id, "user", message);
@@ -159,18 +273,7 @@ const load_conversation = async (conversation_id) => {
   );
 
   for (item of conversation.items) {
-    message_box.innerHTML += `
-      <div class="message ${item.role}">
-        <div class="message-wrapper">
-          <div class="message-avatar">
-            ${item.role == "assistant" ? gpt_image : user_image}
-          </div>
-          <div class="message-content">
-            ${item.role == "assistant" && markdown ? markdown.render(item.content) : item.content}
-          </div>
-        </div>
-      </div>
-    `;
+    message_box.appendChild(createMessageElement(item.role, item.content));
   }
 
   message_box.scrollTop = message_box.scrollHeight;
@@ -224,22 +327,7 @@ const load_conversations = async (limit, offset, loader) => {
   await clear_conversations();
 
   for (conversation of conversations) {
-    box_conversations.innerHTML += `
-    <div class="convo ${window.conversation_id === conversation.id ? 'active' : ''}" id="convo-${conversation.id}" onclick="set_conversation('${conversation.id}')">
-      <span class="convo-title">${conversation.title}</span>
-      <svg onclick="event.stopPropagation(); show_option('${conversation.id}')" id="conv-${conversation.id}" style="margin-left: auto; width: 16px; height: 16px; cursor: pointer;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="3 6 5 6 21 6"></polyline>
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-      </svg>
-      <svg onclick="event.stopPropagation(); delete_conversation('${conversation.id}')" id="yes-${conversation.id}" style="display:none; width: 16px; height: 16px; cursor: pointer;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
-      <svg onclick="event.stopPropagation(); hide_option('${conversation.id}')" id="not-${conversation.id}" style="display:none; width: 16px; height: 16px; cursor: pointer;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </div>
-    `;
+    box_conversations.appendChild(createConversationElement(conversation));
   }
 };
 
